@@ -7,11 +7,13 @@ SaaS de boutiques personnelles : catalogue public, panier, commandes sans interm
 - Page de présentation du SaaS, boutiques publiques et fiches produits.
 - Création d’une boutique après connexion ChatGPT ; profil, couverture, couleurs et paramètres de mise en page modifiables.
 - Produits avec photo principale et galerie complémentaire, recherche et tri dans la boutique.
+- Numéro WhatsApp facultatif par boutique et lien direct prérempli sur chaque produit ; ces conversations ne créent pas de commande dans le tableau de bord.
+- Meta Pixel facultatif par boutique : événements `PageView`, `ViewContent`, `AddToCart`, `InitiateCheckout` et `Lead` après consentement explicite du visiteur. Aucune vente payée n’est déclarée automatiquement.
 - Panier local au navigateur ; confirmation créant une commande persistante, sans encaisser d’argent. Tentatives répétées de la même commande dédupliquées.
 - Tableau de bord vendeur : produits, clients, commandes, statuts, historique de suivi et informations de paiement déclarées par le vendeur.
 - Interface d’administration réservée aux comptes listés dans la variable secrète `ADMIN_EMAILS` du runtime : boutiques, commandes, métriques des 30 derniers jours et attribution manuelle d’offres.
 
-**Limites importantes :** les tarifs de l’abonnement sont indicatifs. Les offres et échéances administratives ne donnent lieu à aucun prélèvement, renouvellement ni suspension automatique. Le paiement de la commande est organisé directement avec le vendeur. Les emails de confirmation automatiques, les domaines personnalisés et la synchronisation du backend Python ne sont pas encore disponibles.
+**Limites importantes :** les tarifs de l’abonnement sont indicatifs. Les offres et échéances administratives ne donnent lieu à aucun prélèvement, renouvellement ni suspension automatique. Le paiement de la commande est organisé directement avec le vendeur. La publication automatique Facebook/Instagram, Meta Business Login, Conversions API, les emails automatiques, les domaines personnalisés et la synchronisation du backend Python ne sont pas encore disponibles.
 
 ## Architecture du site publié
 

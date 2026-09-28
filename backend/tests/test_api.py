@@ -177,3 +177,19 @@ def test_admin_subscription_management_and_analytics(client):
     assert analytics['period_days']==30 and analytics['orders'][0]['order_total']==980000
     assert analytics['subscriptions']==[{'plan':'boutique','status':'canceled','count':1}]
     assert 'customer_email' not in str(analytics)
+
+def test_optional_meta_pixel_and_whatsapp_settings(client):
+    c=client;owner=account(c);other=account(c,'other@example.com')
+    values={'name':'Atelier','slug':'atelier','meta_pixel_id':'123456789012345',
+        'whatsapp_number':'221771234567'}
+    saved=c.put('/api/v1/seller/shop',headers=owner,json=values)
+    assert saved.status_code==200,saved.text
+    public=c.get('/api/v1/shops/atelier').json()
+    assert public['meta_pixel_id']=='123456789012345'
+    assert public['whatsapp_number']=='221771234567'
+    assert c.get('/api/v1/seller/shop',headers=other).status_code==404
+    assert c.put('/api/v1/seller/shop',headers=owner,json={**values,'meta_pixel_id':'1;alert(1)'}).status_code==422
+    assert c.put('/api/v1/seller/shop',headers=owner,json={**values,'whatsapp_number':'+221 77 123'}).status_code==422
+    cleared=c.put('/api/v1/seller/shop',headers=owner,json={'name':'Atelier','slug':'atelier'})
+    assert cleared.status_code==200 and cleared.json()['meta_pixel_id'] is None
+    assert c.get('/api/v1/shops/atelier').json()['whatsapp_number'] is None

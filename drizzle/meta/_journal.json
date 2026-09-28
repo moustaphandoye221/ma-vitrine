@@ -64,6 +64,13 @@
       "when": 1790594449524,
       "tag": "0008_tranquil_firelord",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1790597068019,
+      "tag": "0009_nebulous_maestro",
+      "breakpoints": true
     }
   ]
 }

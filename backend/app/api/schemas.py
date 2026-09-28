@@ -25,6 +25,8 @@ class ShopInput(Input):
     description: str = Field(default='', max_length=500)
     accent_color: str = Field(default='#176b7a', pattern=r'^#[0-9a-fA-F]{6}$')
     payment_instructions: str = Field(default='Paiement à la livraison', min_length=1, max_length=500)
+    meta_pixel_id: str | None = Field(default=None, pattern=r'^\d{8,30}$')
+    whatsapp_number: str | None = Field(default=None, pattern=r'^[1-9]\d{7,14}$')
     cover_position: int = Field(default=50, ge=0, le=100)
     cover_blur: int = Field(default=2, ge=0, le=12)
     cover_shade: int = Field(default=55, ge=40, le=80)

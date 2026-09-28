@@ -65,6 +65,8 @@ Les prix sont des entiers en **centièmes de devise**, comme dans le frontend ex
 
 La boutique expose ses réglages de vitrine (`surface_theme`, `hero_align`, `hero_height`, `card_style`, `catalog_columns`). Un produit accepte jusqu’à quatre `gallery_keys` en plus de son image principale ; chaque image doit appartenir au vendeur. L’historique des commandes enregistre la création et chaque modification de statut ou de règlement.
 
+Le vendeur peut renseigner `meta_pixel_id` (8 à 30 chiffres) et `whatsapp_number` (8 à 15 chiffres au format international sans `+`). Les liens WhatsApp et événements Pixel sont gérés par la vitrine publiée, avec accord préalable du visiteur pour Meta. Cette API Python valide et conserve ces réglages, mais elle n’est pas reliée à la vitrine en production.
+
 L’administrateur peut renseigner manuellement une offre, un cycle, un statut et une échéance par boutique. Ces informations sont **des registres administratifs**, sans facture, prélèvement, renouvellement ni blocage automatique à expiration. Une boutique sans fiche d’abonnement relève implicitement de l’offre Découverte. Les analytics regroupent les commandes des 30 derniers jours par devise, statut et règlement déclaré : leur somme n’est pas du chiffre d’affaires encaissé par la plateforme. La console publiée gère ses propres enregistrements D1 ; elle n’utilise pas encore la base de données Python.
 
 Les listes acceptent `offset` et `limit` (maximum 100). Une clé d'idempotence est unique par boutique : rejouer le même contenu restitue la commande existante ; changer le contenu produit un conflit. Deux requêtes concurrentes peuvent provoquer un conflit SQL : le client doit réessayer avec la même clé, jamais une nouvelle clé automatique.
