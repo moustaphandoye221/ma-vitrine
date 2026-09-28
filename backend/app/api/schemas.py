@@ -87,3 +87,13 @@ class OrderEventView(Output):
     created_at: datetime
 class Moderation(Input):
     active: bool
+class SubscriptionUpdate(Input):
+    plan: Literal['decouverte','boutique','studio']
+    billing_cycle: Literal['none','monthly','annual']
+    status: Literal['active','trial','past_due','canceled']
+    expires_at: datetime | None = None
+    note: str = Field(default='', max_length=500)
+class SubscriptionView(SubscriptionUpdate, Output):
+    id: str
+    shop_id: str
+    created_at: datetime

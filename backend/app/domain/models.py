@@ -78,3 +78,14 @@ class OrderEvent:
     payment_status: str
     id: str = field(default_factory=identifier)
     created_at: datetime = field(default_factory=now)
+
+@dataclass
+class Subscription:
+    shop_id: str
+    plan: str = 'decouverte'
+    billing_cycle: str = 'none'
+    status: str = 'active'
+    expires_at: datetime | None = None
+    note: str = ''
+    id: str = field(default_factory=identifier)
+    created_at: datetime = field(default_factory=now)

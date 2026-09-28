@@ -48,11 +48,11 @@ Toutes les routes applicatives commencent par `/api/v1`.
 | Authentification | `POST /auth/register`, `POST /auth/login`, `GET /auth/me` |
 | Catalogue public | `GET /shops`, `GET /shops/{slug}`, `GET /shops/{slug}/products` (`q`, `sort=recent\|name\|price-asc\|price-desc`), `GET /shops/{slug}/products/{id}` |
 | Commande publique | `POST /shops/{slug}/orders` avec en-tête `Idempotency-Key` (16–100 caractères) |
-| Boutique vendeur | `GET /seller/shop`, `PUT /seller/shop` |
+| Boutique vendeur | `GET /seller/shop`, `PUT /seller/shop`, `GET /seller/subscription` |
 | Produits vendeur | `GET /seller/products`, `POST /seller/products`, `PUT /seller/products/{id}`, `DELETE /seller/products/{id}` |
 | Commandes vendeur | `GET /seller/orders`, `GET /seller/orders/{id}`, `GET /seller/orders/{id}/history`, `PATCH /seller/orders/{id}` |
 | Pilotage vendeur | `GET /seller/metrics`, `GET /seller/clients` |
-| Administration | `GET /admin/metrics`, `GET /admin/shops`, `PATCH /admin/shops/{id}`, `GET /admin/orders` |
+| Administration | `GET /admin/metrics`, `GET /admin/analytics`, `GET /admin/shops`, `PATCH /admin/shops/{id}`, `GET /admin/orders`, `GET /admin/subscriptions`, `GET/PUT /admin/shops/{id}/subscription` |
 | Images | `POST /uploads` (multipart champ `file`), images publiques sous `/media/` |
 
 L'authentification renvoie un JWT court, envoyé dans `Authorization: Bearer ...`. L'inscription ne permet jamais de choisir un rôle. Le compte admin est promu uniquement par un opérateur après création :
@@ -64,6 +64,8 @@ python -m app.cli promote-admin admin@example.com
 Les prix sont des entiers en **centièmes de devise**, comme dans le frontend existant : `490000` représente `4 900 XOF`. Les prix du panier sont relus en base. Le client ne peut pas fournir le total. Les commandes conservent une copie du nom et du prix des articles, même après archivage du produit.
 
 La boutique expose ses réglages de vitrine (`surface_theme`, `hero_align`, `hero_height`, `card_style`, `catalog_columns`). Un produit accepte jusqu’à quatre `gallery_keys` en plus de son image principale ; chaque image doit appartenir au vendeur. L’historique des commandes enregistre la création et chaque modification de statut ou de règlement.
+
+L’administrateur peut renseigner manuellement une offre, un cycle, un statut et une échéance par boutique. Ces informations sont **des registres administratifs**, sans facture, prélèvement, renouvellement ni blocage automatique à expiration. Une boutique sans fiche d’abonnement relève implicitement de l’offre Découverte. Les analytics regroupent les commandes des 30 derniers jours par devise, statut et règlement déclaré : leur somme n’est pas du chiffre d’affaires encaissé par la plateforme. La console publiée gère ses propres enregistrements D1 ; elle n’utilise pas encore la base de données Python.
 
 Les listes acceptent `offset` et `limit` (maximum 100). Une clé d'idempotence est unique par boutique : rejouer le même contenu restitue la commande existante ; changer le contenu produit un conflit. Deux requêtes concurrentes peuvent provoquer un conflit SQL : le client doit réessayer avec la même clé, jamais une nouvelle clé automatique.
 

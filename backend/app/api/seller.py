@@ -2,8 +2,8 @@ from fastapi import APIRouter, Response
 from sqlalchemy import func, select
 from app.api.dependencies import Actor, Uow, Commerce
 from app.api.catalog import Offset, Limit
-from app.api.schemas import ShopInput, ShopView, ProductInput, ProductView, OrderUpdate, OrderView, OrderEventView
-from app.domain.models import Product, Order, OrderEvent
+from app.api.schemas import ShopInput, ShopView, ProductInput, ProductView, OrderUpdate, OrderView, OrderEventView, SubscriptionView
+from app.domain.models import Product, Order, OrderEvent, Subscription
 from app.domain.errors import DomainError
 
 router = APIRouter(prefix='/seller', tags=['Espace vendeur'])
@@ -11,6 +11,9 @@ router = APIRouter(prefix='/seller', tags=['Espace vendeur'])
 def shop(actor: Actor, service: Commerce): return service.owned_shop(actor)
 @router.put('/shop', response_model=ShopView)
 def save_shop(data: ShopInput, actor: Actor, service: Commerce): return service.save_shop(actor, data.model_dump())
+@router.get('/subscription', response_model=SubscriptionView|None)
+def subscription(actor: Actor, service: Commerce, uow: Uow):
+    return uow.repo.one(Subscription,shop_id=service.owned_shop(actor).id)
 @router.get('/products', response_model=list[ProductView])
 def products(actor: Actor, service: Commerce, uow: Uow, offset: Offset=0, limit: Limit=50):
     return uow.repo.list(Product, offset, limit, shop_id=service.owned_shop(actor).id, active=True)

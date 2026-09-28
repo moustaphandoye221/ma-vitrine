@@ -57,6 +57,13 @@
       "when": 1790589967189,
       "tag": "0007_cuddly_ulik",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1790594449524,
+      "tag": "0008_tranquil_firelord",
+      "breakpoints": true
     }
   ]
 }

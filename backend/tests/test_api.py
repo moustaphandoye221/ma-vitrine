@@ -148,3 +148,32 @@ def test_order_history_and_owner_isolation(client):
     history=c.get(path+'/history',headers=h).json()
     assert [event['status'] for event in history]==['nouvelle','confirmée','confirmée']
     assert [event['payment_status'] for event in history]==['non payé','non payé','payé']
+
+def test_admin_subscription_management_and_analytics(client):
+    c=client;seller=account(c);shop,product=setup(c,seller)
+    admin=account(c,'admin@example.com')
+    with Session(c.app.state.engine) as session:
+        user=SqlRepository(session).one(User,email='admin@example.com');user.role='admin';session.commit()
+    base='/api/v1/admin/shops/'+shop['id']+'/subscription'
+    assert c.get('/api/v1/admin/analytics',headers=seller).status_code==403
+    assert c.get('/api/v1/admin/subscriptions',headers=seller).status_code==403
+    assert c.put(base,headers=seller,json={'plan':'studio','billing_cycle':'annual','status':'active'}).status_code==403
+    assert c.get('/api/v1/seller/subscription',headers=seller).json() is None
+    assert c.put(base,headers=admin,json={'plan':'studio','billing_cycle':'none','status':'active'}).status_code==422
+    assert c.put(base,headers=admin,json={'plan':'decouverte','billing_cycle':'monthly','status':'active'}).status_code==422
+    values={'plan':'boutique','billing_cycle':'monthly','status':'trial',
+        'expires_at':'2027-01-01T00:00:00Z','note':'Période attribuée manuellement'}
+    response=c.put(base,headers=admin,json=values)
+    assert response.status_code==200,response.text
+    assert c.get(base,headers=admin).json()['plan']=='boutique'
+    assert c.get('/api/v1/seller/subscription',headers=seller).json()['status']=='trial'
+    values['status']='canceled'
+    assert c.put(base,headers=admin,json=values).status_code==200
+    assert len(c.get('/api/v1/admin/subscriptions',headers=admin).json())==1
+    assert c.get('/api/v1/admin/metrics',headers=admin).json()['subscriptions']==1
+    assert c.put('/api/v1/admin/shops/unknown/subscription',headers=admin,json=values).status_code==404
+    assert c.post('/api/v1/shops/atelier/orders',headers=KEY,json=body(product)).status_code==201
+    analytics=c.get('/api/v1/admin/analytics',headers=admin).json()
+    assert analytics['period_days']==30 and analytics['orders'][0]['order_total']==980000
+    assert analytics['subscriptions']==[{'plan':'boutique','status':'canceled','count':1}]
+    assert 'customer_email' not in str(analytics)

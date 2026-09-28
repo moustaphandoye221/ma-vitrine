@@ -1,7 +1,7 @@
 from sqlalchemy import (Boolean, CheckConstraint, Column, DateTime, ForeignKey,
     Integer, JSON, MetaData, String, Table, UniqueConstraint, create_engine, event, select)
 from sqlalchemy.orm import Session, registry
-from app.domain.models import User, Shop, Product, Order, OrderEvent
+from app.domain.models import User, Shop, Product, Order, OrderEvent, Subscription
 
 mapper = registry(metadata=MetaData())
 metadata = mapper.metadata
@@ -42,7 +42,15 @@ order_events = Table('order_events', metadata, *common(),
     Column('order_id', ForeignKey('orders.id'), nullable=False, index=True),
     Column('status', String(30), nullable=False),
     Column('payment_status', String(20), nullable=False))
-for model, table in [(User, users), (Shop, shops), (Product, products), (Order, orders), (OrderEvent, order_events)]:
+subscriptions = Table('subscriptions', metadata, *common(),
+    Column('shop_id', ForeignKey('shops.id'), unique=True, nullable=False),
+    Column('plan', String(20), nullable=False), Column('billing_cycle', String(20), nullable=False),
+    Column('status', String(20), nullable=False), Column('expires_at', DateTime(timezone=True)),
+    Column('note', String(500), nullable=False),
+    CheckConstraint("plan IN ('decouverte','boutique','studio')"),
+    CheckConstraint("billing_cycle IN ('none','monthly','annual')"),
+    CheckConstraint("status IN ('active','trial','past_due','canceled')"))
+for model, table in [(User, users), (Shop, shops), (Product, products), (Order, orders), (OrderEvent, order_events), (Subscription, subscriptions)]:
     mapper.map_imperatively(model, table)
 
 def make_engine(url: str):

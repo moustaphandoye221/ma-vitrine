@@ -14,3 +14,9 @@ export const orders = sqliteTable('orders', {
 export const orderEvents = sqliteTable('order_events', {
  id:text('id').primaryKey(), orderId:text('order_id').notNull().references(()=>orders.id), shopId:text('shop_id').notNull().references(()=>shops.id), status:text('status').notNull(), paymentStatus:text('payment_status').notNull(), createdAt:text('created_at').notNull()
 });
+export const subscriptions = sqliteTable('subscriptions', {
+ id:text('id').primaryKey(), shopId:text('shop_id').notNull().unique().references(()=>shops.id),
+ plan:text('plan').notNull().default('decouverte'), billingCycle:text('billing_cycle').notNull().default('none'),
+ status:text('status').notNull().default('active'), expiresAt:text('expires_at'), note:text('note').notNull().default(''),
+ createdAt:text('created_at').notNull(), updatedAt:text('updated_at').notNull()
+});
