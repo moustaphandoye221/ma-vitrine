@@ -1,0 +1,1 @@
+ALTER TABLE `shops` DROP COLUMN `meta_pixel_id`;

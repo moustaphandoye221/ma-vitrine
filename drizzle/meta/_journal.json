@@ -71,6 +71,13 @@
       "when": 1790597068019,
       "tag": "0009_nebulous_maestro",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1790598038432,
+      "tag": "0010_productive_sleepwalker",
+      "breakpoints": true
     }
   ]
 }

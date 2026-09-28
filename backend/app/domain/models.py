@@ -34,7 +34,6 @@ class Shop:
     card_style: str = 'doux'
     catalog_columns: int = 3
     payment_instructions: str = 'Paiement à la livraison'
-    meta_pixel_id: str | None = None
     whatsapp_number: str | None = None
     avatar_key: str | None = None
     cover_key: str | None = None
