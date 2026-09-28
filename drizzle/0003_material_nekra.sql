@@ -1,0 +1,1 @@
+ALTER TABLE `shops` ADD `accent_color` text DEFAULT '#176b7a' NOT NULL;

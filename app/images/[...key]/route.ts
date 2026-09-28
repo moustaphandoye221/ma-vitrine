@@ -1,0 +1,2 @@
+import { bucket } from '../../data';
+export async function GET(_request:Request,{params}:{params:Promise<{key:string[]}>}){const {key}=await params;try{const object=await bucket().get(key.join("/"));if(!object)return new Response('Image introuvable',{status:404});return new Response(object.body,{headers:{'Content-Type':object.httpMetadata?.contentType||'application/octet-stream','Cache-Control':'public, max-age=3600','X-Content-Type-Options':'nosniff'}})}catch{return new Response('Image indisponible',{status:503})}}

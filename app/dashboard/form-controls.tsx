@@ -1,0 +1,11 @@
+'use client';
+import { useFormStatus } from 'react-dom';
+import { useEffect, useState, useRef } from 'react';
+export function SubmitButton({children}:{children:React.ReactNode}){const {pending}=useFormStatus();return <button className="seller-solid" type="submit" disabled={pending} aria-busy={pending}>{pending?'Enregistrement…':children}</button>}
+export function ImageField({id,name,label,current,variant='',removable=false,onPreview}:{id:string;name:string;label:string;current?:string|null;variant?:string;removable?:boolean;onPreview?:(url:string|null)=>void}){
+ const input=useRef<HTMLInputElement>(null);const [file,setFile]=useState<File|null>(null),[preview,setPreview]=useState<string|null>(null),[error,setError]=useState(''),[removed,setRemoved]=useState(false);
+ useEffect(()=>{if(!file){setPreview(null);return}const url=URL.createObjectURL(file);setPreview(url);return()=>URL.revokeObjectURL(url)},[file]);
+ const visible=preview||(!removed?current:null)||null;
+ useEffect(()=>{onPreview?.(visible)},[visible,onPreview]);
+ return <div className="field"><label htmlFor={id}>{label}</label><input ref={input} id={id} name={name} type="file" accept="image/png,image/jpeg,image/webp" aria-describedby={id+'-help'} onChange={e=>{const f=e.target.files?.[0];const invalid=!!f&&(f.size>5000000||!['image/png','image/jpeg','image/webp'].includes(f.type));if(invalid){e.target.value='';setFile(null);setError('Choisissez une image JPG, PNG ou WebP de moins de 5 Mo.')}else{setFile(f||null);if(f)setRemoved(false);setError('')}}}/><small id={id+'-help'}>JPG, PNG ou WebP · 5 Mo maximum{variant==='cover'?' · Format paysage conseillé : 1 920 × 800 px':''}</small>{error&&<span className="alert error" role="alert">{error}</span>}{visible&&<img className={'seller-form-preview '+variant} src={visible} alt={'Aperçu : '+label}/>}{removable&&<><input type="hidden" name={'remove_'+name} value={removed?'1':'0'}/>{visible&&<button className="image-remove" type="button" onClick={()=>{setRemoved(true);setFile(null);if(input.current)input.current.value=''}}>Supprimer cette image</button>}{removed&&<div className="image-removal-note" role="status">L’image sera supprimée à l’enregistrement. {current&&<button type="button" onClick={()=>setRemoved(false)}>Annuler</button>}</div>}</>}</div>
+}

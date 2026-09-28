@@ -1,0 +1,29 @@
+import CoverEditor from '../cover-editor';
+import { SubmitButton,ImageField } from '../form-controls';
+import Link from 'next/link';
+import { saveShop } from '../../actions';
+import { sellerData } from '../shared';
+import { imageUrl } from '../../data';
+import { ExternalLink,Link2,Palette,Image as ImageIcon,Wallet,Store } from 'lucide-react';
+import StyleEditor from '../style-editor';
+import CopyLink from '../copy-link';
+export const dynamic='force-dynamic';
+
+export default async function BoutiqueSettings({searchParams}:{searchParams:Promise<{message?:string}>}){
+ let data;
+ try{data=await sellerData('/dashboard/boutique')}catch{return <div className="alert error">Les paramètres sont indisponibles. Réessayez.</div>}
+ const {shop,products}=data,{message}=await searchParams;
+ return <div className="shop-settings-page">
+  <div className="seller-heading shop-settings-heading"><div><span className="seller-eyebrow">VOTRE ESPACE CRÉATIF</span><h1>Personnaliser ma boutique</h1><p>Votre identité, vos produits et votre façon de vendre, réunis dans une vitrine à votre image.</p></div>{shop&&<Link className="seller-outline" href={'/boutique/'+shop.slug} target="_blank">Ouvrir la vitrine <ExternalLink size={16}/></Link>}</div>
+  {message&&<div className="alert" role="status">{message}</div>}
+  {shop&&<div className="shop-share-bar"><div className="shop-share-icon"><Link2 size={20}/></div><div><strong>Votre lien de boutique</strong><span>/boutique/{shop.slug}</span></div><CopyLink slug={shop.slug}/></div>}
+  <nav className="shop-settings-nav" aria-label="Rubriques de personnalisation"><a href="#identite"><Store size={17}/> Identité</a><a href="#apparence"><Palette size={17}/> Apparence</a><a href="#couverture"><ImageIcon size={17}/> Couverture</a><a href="#reglement"><Wallet size={17}/> Commandes</a></nav>
+  <form action={saveShop} encType="multipart/form-data" className="shop-settings-form">
+   <section id="identite" className="seller-form-card shop-settings-card"><div className="shop-settings-section-heading"><span>01</span><div><h2>Identité de la boutique</h2><p>Les informations que vos clients voient en premier.</p></div></div><div className="shop-settings-two"><div><div className="field"><label htmlFor="shop-name">Nom de la boutique</label><input id="shop-name" name="name" defaultValue={shop?.name||''} required maxLength={80} placeholder="Ex. Atelier du Lagon"/></div><div className="field"><label htmlFor="shop-slug">Lien personnel</label><div className="slug-input"><span>/boutique/</span><input id="shop-slug" name="slug" pattern="[a-z0-9]+(-[a-z0-9]+)*" maxLength={40} defaultValue={shop?.slug||''} placeholder="atelier-du-lagon"/></div><small>Un nouveau lien remplace l’ancien si vous le modifiez.</small></div><div className="field"><label htmlFor="shop-desc">Description</label><textarea id="shop-desc" name="description" maxLength={500} defaultValue={shop?.description||''} placeholder="Racontez votre univers et ce qui rend vos produits uniques"/><small>Quelques phrases claires suffisent à présenter votre boutique.</small></div></div><div className="shop-profile-field"><ImageField id="avatar" name="avatar" label="Photo de profil" variant="round" removable current={shop?.avatar_key?imageUrl(shop.avatar_key):null}/><p>Un logo ou une photo carrée aide vos visiteurs à reconnaître votre boutique.</p></div></div></section>
+   <div id="apparence" className="seller-form-card shop-settings-card"><div className="shop-settings-section-heading"><span>02</span><div><h2>Un design qui vous ressemble</h2><p>Essayez les styles et comparez les vues ordinateur et mobile.</p></div></div><StyleEditor initial={{accent:shop?.accent_color||'#176b7a',surface:shop?.surface_theme||'blanc',align:shop?.hero_align||'gauche',height:shop?.hero_height||'standard',card:shop?.card_style||'doux',columns:shop?.catalog_columns||3}} name={shop?.name||'Votre boutique'} description={shop?.description||''} cover={shop?.cover_key?imageUrl(shop.cover_key):null} productImage={products[0]?.image_key?imageUrl(products[0].image_key):null}/></div>
+   <div id="couverture" className="seller-form-card shop-settings-card"><div className="shop-settings-section-heading"><span>03</span><div><h2>Image de couverture</h2><p>Cadrez votre image et vérifiez la lisibilité du titre.</p></div></div><CoverEditor current={shop?.cover_key?imageUrl(shop.cover_key):null} name={shop?.name||'Votre boutique'} position={shop?.cover_position??50} blur={shop?.cover_blur??2} shade={shop?.cover_shade??55}/></div>
+   <section id="reglement" className="seller-form-card shop-settings-card"><div className="shop-settings-section-heading"><span>04</span><div><h2>Commandes et règlement</h2><p>Expliquez à vos clients comment vous organisez le paiement.</p></div></div><div className="field"><label htmlFor="payment-instructions">Modalités de règlement</label><textarea id="payment-instructions" name="payment_instructions" maxLength={500} defaultValue={shop?.payment_instructions||'Paiement à la livraison'} placeholder="Ex. Paiement à la livraison ou virement après confirmation"/><small>Ces indications s’affichent au client après sa commande. Aucun paiement en ligne n’est prélevé par Ma Vitrine.</small></div></section>
+   <div className="shop-save-bar"><p>Les changements seront visibles sur votre vitrine dès leur enregistrement.</p><SubmitButton>{shop?'Enregistrer les modifications':'Créer ma boutique'}</SubmitButton></div>
+  </form>
+ </div>
+}

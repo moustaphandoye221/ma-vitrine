@@ -1,0 +1,5 @@
+'use client';
+import { useTransition } from 'react';
+import { deleteProduct } from '../actions';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+export default function DeleteProduct({id,name}:{id:string;name:string}){const [pending,start]=useTransition();return <AlertDialog><AlertDialogTrigger className="seller-delete-trigger" disabled={pending}>Supprimer ce produit</AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Supprimer « {name} » ?</AlertDialogTitle><AlertDialogDescription>Le produit disparaîtra du catalogue. Cette action ne peut pas être annulée.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction variant="destructive" onClick={()=>{const form=new FormData();form.set('id',id);start(()=>void deleteProduct(form))}}>Supprimer</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>}

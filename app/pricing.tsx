@@ -1,0 +1,11 @@
+'use client';
+import Link from 'next/link';
+import { Check } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+const plans = [
+  { name:'Découverte', note:'Pour lancer une première vitrine', monthly:'0', yearly:'0', features:['Boutique personnalisée','Catalogue de produits','Panier et commandes'] },
+  { name:'Boutique', note:'Pour développer ses ventes', monthly:'4 900', yearly:'49 000', features:['Tout dans Découverte','Présentation soignée du catalogue','Suivi des commandes'] },
+  { name:'Studio', note:'Pour une activité qui grandit', monthly:'8 900', yearly:'89 000', features:['Tout dans Boutique','Espace vendeur complet','Personnalisation de la vitrine'] },
+];
+function Cards({period, dashboard}:{period:'monthly'|'yearly';dashboard:string}){return <div className="pricing-grid">{plans.map((plan,i)=><article className={'pricing-card'+(i===1?' featured':'')} key={plan.name}>{i===1&&<span className="pricing-popular">LE PLUS CHOISI</span>}<h3>{plan.name}</h3><p className="pricing-note">{plan.note}</p><div className="pricing-amount" aria-label={`${period==='monthly'?plan.monthly:plan.yearly} francs CFA par ${period==='monthly'?'mois':'an'}`}><strong>{period==='monthly'?plan.monthly:plan.yearly}</strong><span>FCFA / {period==='monthly'?'mois':'an'}</span></div><p className="pricing-caption">{period==='yearly'&&i>0?'Soit environ '+Math.round(Number(plan.yearly.replace(' ',''))/12).toLocaleString('fr-FR')+' FCFA / mois':'Pour votre activité, à votre rythme.'}</p><Link className={'pricing-button'+(i===1?' emphasized':'')} href={dashboard}>Créer ma boutique</Link><ul>{plan.features.map(feature=><li key={feature}><Check size={18}/>{feature}</li>)}</ul></article>)}</div>}
+export default function Pricing({dashboard}:{dashboard:string}){return <Tabs defaultValue="monthly" className="pricing-tabs"><TabsList aria-label="Période de facturation" className="pricing-tab-list"><TabsTrigger value="monthly">Mensuel</TabsTrigger><TabsTrigger value="yearly">Annuel</TabsTrigger></TabsList><p className="pricing-savings">Économisez environ 17 % avec le paiement annuel</p><TabsContent value="monthly"><Cards period="monthly" dashboard={dashboard}/></TabsContent><TabsContent value="yearly"><Cards period="yearly" dashboard={dashboard}/></TabsContent></Tabs>}
