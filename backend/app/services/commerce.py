@@ -1,6 +1,6 @@
 import hashlib
 import json
-from app.domain.models import Shop, Product, Order, User
+from app.domain.models import Shop, Product, Order, OrderEvent, User
 from app.domain.errors import DomainError
 from app.domain.ports import UnitOfWork
 
@@ -28,6 +28,12 @@ class CommerceService:
         for key in ('image_key','avatar_key','cover_key'):
             value = values.get(key)
             if value and (not value.startswith(actor.id+'/') or '..' in value or value.count('/') != 1):
+                raise DomainError('Image non autorisée.', 403)
+        gallery = values.get('gallery_keys', [])
+        if len(gallery) > 4 or len(gallery) != len(set(gallery)):
+            raise DomainError('Maximum 4 photos différentes.', 400)
+        for value in gallery:
+            if not value.startswith(actor.id+'/') or '..' in value or value.count('/') != 1:
                 raise DomainError('Image non autorisée.', 403)
     def save_shop(self, actor: User, values: dict) -> Shop:
         self.validate_assets(actor, values)
@@ -73,6 +79,7 @@ class CommerceService:
             customer_phone=payload['phone'], delivery_address=payload['address'], items=lines,
             total=total, currency=currency, idempotency_key=key, request_hash=fingerprint)
         self.uow.repo.add(order)
+        self.uow.repo.add(OrderEvent(shop_id=shop.id, order_id=order.id, status=order.status, payment_status=order.payment_status))
         self.uow.commit()
         return order
     def update_order(self, actor: User, identifier: str, status: str, payment_status: str) -> Order:
@@ -81,6 +88,8 @@ class CommerceService:
         if not order or order.shop_id != shop.id: raise DomainError('Commande introuvable.', 404)
         if status != order.status and status not in TRANSITIONS[order.status]:
             raise DomainError('Transition de statut non autorisée.', 409)
-        order.status, order.payment_status = status, payment_status
-        self.uow.commit()
+        if status != order.status or payment_status != order.payment_status:
+            order.status, order.payment_status = status, payment_status
+            self.uow.repo.add(OrderEvent(shop_id=shop.id, order_id=order.id, status=status, payment_status=payment_status))
+            self.uow.commit()
         return order

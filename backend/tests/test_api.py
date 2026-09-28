@@ -102,3 +102,49 @@ def test_slug_and_pagination(client):
     assert c.put('/api/v1/seller/shop',headers=b,json={'name':'Other','slug':'atelier'}).status_code==409
     assert c.get('/api/v1/shops?limit=101').status_code==422
     assert c.get('/api/v1/shops?offset=1').json()==[]
+
+def test_storefront_customization_and_validation(client):
+    c=client;h=account(c)
+    values={'name':'Atelier du Lagon','slug':'atelier-lagon','accent_color':'#245aa0',
+        'surface_theme':'glacier','hero_align':'centre','hero_height':'grand',
+        'card_style':'angle','catalog_columns':4,'cover_position':72,'cover_blur':4,'cover_shade':65}
+    saved=c.put('/api/v1/seller/shop',headers=h,json=values)
+    assert saved.status_code==200,saved.text
+    public=c.get('/api/v1/shops/atelier-lagon').json()
+    assert public['surface_theme']=='glacier' and public['catalog_columns']==4
+    assert public['cover_position']==72 and public['card_style']=='angle'
+    assert c.put('/api/v1/seller/shop',headers=h,json={**values,'hero_height':'very-large'}).status_code==422
+    assert c.put('/api/v1/seller/shop',headers=h,json={**values,'catalog_columns':5}).status_code==422
+
+def test_product_gallery_and_catalog_search(client):
+    c=client;h=account(c);setup(c,h)
+    image=BytesIO();Image.new('RGB',(16,16),(31,95,130)).save(image,format='PNG')
+    uploaded=c.post('/api/v1/uploads',headers=h,files={'file':('detail.png',image.getvalue(),'image/png')})
+    assert uploaded.status_code==201
+    key=uploaded.json()['key']
+    created=c.post('/api/v1/seller/products',headers=h,json={'name':'Bol bleu','price':1500,'gallery_keys':[key]})
+    assert created.status_code==201,created.text
+    identifier=created.json()['id']
+    assert c.get('/api/v1/shops/atelier/products/'+identifier).json()['gallery_keys']==[key]
+    assert [p['name'] for p in c.get('/api/v1/shops/atelier/products?q=BLEU').json()]==['Bol bleu']
+    assert [p['name'] for p in c.get('/api/v1/shops/atelier/products?sort=price-desc').json()]==['Bracelet','Bol bleu']
+    assert c.post('/api/v1/seller/products',headers=h,json={'name':'x','price':10,'gallery_keys':[key]*2}).status_code==400
+    other=account(c,'bob@example.com');setup(c,other,'bob')
+    assert c.post('/api/v1/seller/products',headers=other,json={'name':'x','price':10,'gallery_keys':[key]}).status_code==403
+    updated=c.put('/api/v1/seller/products/'+identifier,headers=h,json={'name':'Bol bleu','price':1500,'gallery_keys':[]})
+    assert updated.status_code==200 and updated.json()['gallery_keys']==[]
+
+def test_order_history_and_owner_isolation(client):
+    c=client;h=account(c);_,product=setup(c,h);other=account(c,'bob@example.com');setup(c,other,'bob')
+    created=c.post('/api/v1/shops/atelier/orders',headers=KEY,json=body(product)).json()
+    path='/api/v1/seller/orders/'+created['id']
+    assert c.get(path+'/history',headers=other).status_code==404
+    assert [event['status'] for event in c.get(path+'/history',headers=h).json()]==['nouvelle']
+    change={'status':'confirmée','payment_status':'non payé'}
+    assert c.patch(path,headers=h,json=change).status_code==200
+    assert c.patch(path,headers=h,json=change).status_code==200
+    change['payment_status']='payé'
+    assert c.patch(path,headers=h,json=change).status_code==200
+    history=c.get(path+'/history',headers=h).json()
+    assert [event['status'] for event in history]==['nouvelle','confirmée','confirmée']
+    assert [event['payment_status'] for event in history]==['non payé','non payé','payé']

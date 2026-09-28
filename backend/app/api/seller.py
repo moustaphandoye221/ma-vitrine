@@ -2,8 +2,8 @@ from fastapi import APIRouter, Response
 from sqlalchemy import func, select
 from app.api.dependencies import Actor, Uow, Commerce
 from app.api.catalog import Offset, Limit
-from app.api.schemas import ShopInput, ShopView, ProductInput, ProductView, OrderUpdate, OrderView
-from app.domain.models import Product, Order
+from app.api.schemas import ShopInput, ShopView, ProductInput, ProductView, OrderUpdate, OrderView, OrderEventView
+from app.domain.models import Product, Order, OrderEvent
 from app.domain.errors import DomainError
 
 router = APIRouter(prefix='/seller', tags=['Espace vendeur'])
@@ -36,6 +36,14 @@ def order(identifier: str, actor: Actor, service: Commerce, uow: Uow):
     order = uow.repo.get(Order, identifier)
     if not order or order.shop_id != service.owned_shop(actor).id: raise DomainError('Commande introuvable.',404)
     return order
+@router.get('/orders/{identifier}/history', response_model=list[OrderEventView])
+def order_history(identifier: str, actor: Actor, service: Commerce, uow: Uow):
+    shop = service.owned_shop(actor)
+    current = uow.repo.get(Order, identifier)
+    if not current or current.shop_id != shop.id: raise DomainError('Commande introuvable.', 404)
+    return list(uow.session.scalars(select(OrderEvent).where(
+        OrderEvent.order_id == identifier, OrderEvent.shop_id == shop.id
+    ).order_by(OrderEvent.created_at.asc(), OrderEvent.id.asc())))
 @router.patch('/orders/{identifier}', response_model=OrderView)
 def update_order(identifier: str, data: OrderUpdate, actor: Actor, service: Commerce):
     return service.update_order(actor,identifier,data.status,data.payment_status)

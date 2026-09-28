@@ -1,5 +1,6 @@
-from typing import Annotated
+from typing import Annotated, Literal
 from fastapi import APIRouter, Header, Query
+from sqlalchemy import select, or_
 from app.api.dependencies import Uow, Commerce
 from app.api.schemas import ShopView, ProductView, Checkout, Receipt
 from app.domain.models import Shop, Product
@@ -14,8 +15,16 @@ def shops(uow: Uow, offset: Offset=0, limit: Limit=50):
 @router.get('/{slug}', response_model=ShopView)
 def shop(slug: str, service: Commerce): return service.public_shop(slug)
 @router.get('/{slug}/products', response_model=list[ProductView])
-def products(slug: str, service: Commerce, uow: Uow, offset: Offset=0, limit: Limit=50):
-    return uow.repo.list(Product, offset, limit, shop_id=service.public_shop(slug).id, active=True)
+def products(slug: str, service: Commerce, uow: Uow, offset: Offset=0, limit: Limit=50,
+    q: Annotated[str | None, Query(max_length=80)]=None,
+    sort: Literal['recent','name','price-asc','price-desc']='recent'):
+    query=select(Product).where(Product.shop_id==service.public_shop(slug).id, Product.active.is_(True))
+    if q and q.strip():
+        term=q.strip().replace('\\','\\\\').replace('%','\\%').replace('_','\\_')
+        query=query.where(or_(Product.name.ilike(f'%{term}%',escape='\\'),Product.description.ilike(f'%{term}%',escape='\\')))
+    ordering={'recent':Product.created_at.desc(),'name':Product.name.asc(),
+        'price-asc':Product.price.asc(),'price-desc':Product.price.desc()}
+    return list(uow.session.scalars(query.order_by(ordering[sort],Product.id).offset(offset).limit(limit)))
 @router.get('/{slug}/products/{identifier}', response_model=ProductView)
 def product(slug: str, identifier: str, service: Commerce, uow: Uow):
     shop = service.public_shop(slug)

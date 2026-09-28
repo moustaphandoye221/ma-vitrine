@@ -1,7 +1,7 @@
 from sqlalchemy import (Boolean, CheckConstraint, Column, DateTime, ForeignKey,
     Integer, JSON, MetaData, String, Table, UniqueConstraint, create_engine, event, select)
 from sqlalchemy.orm import Session, registry
-from app.domain.models import User, Shop, Product, Order
+from app.domain.models import User, Shop, Product, Order, OrderEvent
 
 mapper = registry(metadata=MetaData())
 metadata = mapper.metadata
@@ -18,11 +18,17 @@ shops = Table('shops', metadata, *common(), Column('owner_id', ForeignKey('users
     Column('description', String(500), nullable=False), Column('accent_color', String(7), nullable=False),
     Column('payment_instructions', String(500), nullable=False), Column('avatar_key', String(100)),
     Column('cover_key', String(100)), Column('cover_position', Integer, nullable=False, server_default='50'),
-    Column('cover_blur', Integer, nullable=False, server_default='2'), Column('cover_shade', Integer, nullable=False, server_default='55'), Column('active', Boolean, nullable=False))
+    Column('cover_blur', Integer, nullable=False, server_default='2'), Column('cover_shade', Integer, nullable=False, server_default='55'),
+    Column('surface_theme', String(20), nullable=False, server_default='blanc'),
+    Column('hero_align', String(20), nullable=False, server_default='gauche'),
+    Column('hero_height', String(20), nullable=False, server_default='standard'),
+    Column('card_style', String(20), nullable=False, server_default='doux'),
+    Column('catalog_columns', Integer, nullable=False, server_default='3'), Column('active', Boolean, nullable=False))
 products = Table('products', metadata, *common(), Column('shop_id', ForeignKey('shops.id'), nullable=False, index=True),
     Column('name', String(100), nullable=False), Column('description', String(1000), nullable=False),
     Column('price', Integer, nullable=False), Column('currency', String(3), nullable=False),
-    Column('image_key', String(100)), Column('active', Boolean, nullable=False), CheckConstraint('price > 0'),
+    Column('image_key', String(100)), Column('gallery_keys', JSON, nullable=False, server_default='[]'),
+    Column('active', Boolean, nullable=False), CheckConstraint('price > 0'),
     CheckConstraint("currency IN ('XOF','EUR','USD')"))
 orders = Table('orders', metadata, *common(), Column('shop_id', ForeignKey('shops.id'), nullable=False, index=True),
     Column('customer_name', String(100), nullable=False), Column('customer_email', String(254), nullable=False),
@@ -31,7 +37,12 @@ orders = Table('orders', metadata, *common(), Column('shop_id', ForeignKey('shop
     Column('status', String(30), nullable=False), Column('payment_status', String(20), nullable=False),
     Column('idempotency_key', String(100), nullable=False), Column('request_hash', String(64), nullable=False),
     UniqueConstraint('shop_id', 'idempotency_key'), CheckConstraint('total > 0'))
-for model, table in [(User, users), (Shop, shops), (Product, products), (Order, orders)]:
+order_events = Table('order_events', metadata, *common(),
+    Column('shop_id', ForeignKey('shops.id'), nullable=False),
+    Column('order_id', ForeignKey('orders.id'), nullable=False, index=True),
+    Column('status', String(30), nullable=False),
+    Column('payment_status', String(20), nullable=False))
+for model, table in [(User, users), (Shop, shops), (Product, products), (Order, orders), (OrderEvent, order_events)]:
     mapper.map_imperatively(model, table)
 
 def make_engine(url: str):

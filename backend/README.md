@@ -46,11 +46,11 @@ Toutes les routes applicatives commencent par `/api/v1`.
 | Groupe | Routes principales |
 | --- | --- |
 | Authentification | `POST /auth/register`, `POST /auth/login`, `GET /auth/me` |
-| Catalogue public | `GET /shops`, `GET /shops/{slug}`, `GET /shops/{slug}/products`, `GET /shops/{slug}/products/{id}` |
+| Catalogue public | `GET /shops`, `GET /shops/{slug}`, `GET /shops/{slug}/products` (`q`, `sort=recent\|name\|price-asc\|price-desc`), `GET /shops/{slug}/products/{id}` |
 | Commande publique | `POST /shops/{slug}/orders` avec en-tête `Idempotency-Key` (16–100 caractères) |
 | Boutique vendeur | `GET /seller/shop`, `PUT /seller/shop` |
 | Produits vendeur | `GET /seller/products`, `POST /seller/products`, `PUT /seller/products/{id}`, `DELETE /seller/products/{id}` |
-| Commandes vendeur | `GET /seller/orders`, `GET /seller/orders/{id}`, `PATCH /seller/orders/{id}` |
+| Commandes vendeur | `GET /seller/orders`, `GET /seller/orders/{id}`, `GET /seller/orders/{id}/history`, `PATCH /seller/orders/{id}` |
 | Pilotage vendeur | `GET /seller/metrics`, `GET /seller/clients` |
 | Administration | `GET /admin/metrics`, `GET /admin/shops`, `PATCH /admin/shops/{id}`, `GET /admin/orders` |
 | Images | `POST /uploads` (multipart champ `file`), images publiques sous `/media/` |
@@ -62,6 +62,8 @@ python -m app.cli promote-admin admin@example.com
 ```
 
 Les prix sont des entiers en **centièmes de devise**, comme dans le frontend existant : `490000` représente `4 900 XOF`. Les prix du panier sont relus en base. Le client ne peut pas fournir le total. Les commandes conservent une copie du nom et du prix des articles, même après archivage du produit.
+
+La boutique expose ses réglages de vitrine (`surface_theme`, `hero_align`, `hero_height`, `card_style`, `catalog_columns`). Un produit accepte jusqu’à quatre `gallery_keys` en plus de son image principale ; chaque image doit appartenir au vendeur. L’historique des commandes enregistre la création et chaque modification de statut ou de règlement.
 
 Les listes acceptent `offset` et `limit` (maximum 100). Une clé d'idempotence est unique par boutique : rejouer le même contenu restitue la commande existante ; changer le contenu produit un conflit. Deux requêtes concurrentes peuvent provoquer un conflit SQL : le client doit réessayer avec la même clé, jamais une nouvelle clé automatique.
 

@@ -28,6 +28,11 @@ class ShopInput(Input):
     cover_position: int = Field(default=50, ge=0, le=100)
     cover_blur: int = Field(default=2, ge=0, le=12)
     cover_shade: int = Field(default=55, ge=40, le=80)
+    surface_theme: Literal['blanc','brume','glacier'] = 'blanc'
+    hero_align: Literal['gauche','centre'] = 'gauche'
+    hero_height: Literal['compact','standard','grand'] = 'standard'
+    card_style: Literal['doux','angle'] = 'doux'
+    catalog_columns: Literal[2,3,4] = 3
     avatar_key: str | None = Field(default=None, max_length=100)
     cover_key: str | None = Field(default=None, max_length=100)
 class ShopView(ShopInput, Output):
@@ -39,6 +44,7 @@ class ProductInput(Input):
     price: int = Field(gt=0, le=10_000_000_000, strict=True, description='Montant en centièmes de devise, compatible avec le frontend existant')
     currency: Literal['XOF','EUR','USD'] = 'XOF'
     image_key: str | None = Field(default=None, max_length=100)
+    gallery_keys: list[str] = Field(default_factory=list, max_length=4)
 class ProductView(ProductInput, Output):
     id: str
     shop_id: str
@@ -73,5 +79,11 @@ class Receipt(Output):
     total: int
     currency: str
     status: str
+class OrderEventView(Output):
+    id: str
+    order_id: str
+    status: str
+    payment_status: str
+    created_at: datetime
 class Moderation(Input):
     active: bool

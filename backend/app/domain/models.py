@@ -28,6 +28,11 @@ class Shop:
     cover_position: int = 50
     cover_blur: int = 2
     cover_shade: int = 55
+    surface_theme: str = 'blanc'
+    hero_align: str = 'gauche'
+    hero_height: str = 'standard'
+    card_style: str = 'doux'
+    catalog_columns: int = 3
     payment_instructions: str = 'Paiement à la livraison'
     avatar_key: str | None = None
     cover_key: str | None = None
@@ -43,6 +48,7 @@ class Product:
     currency: str = 'XOF'
     description: str = ''
     image_key: str | None = None
+    gallery_keys: list[str] = field(default_factory=list)
     id: str = field(default_factory=identifier)
     active: bool = True
     created_at: datetime = field(default_factory=now)
@@ -62,4 +68,13 @@ class Order:
     id: str = field(default_factory=identifier)
     status: str = 'nouvelle'
     payment_status: str = 'non payé'
+    created_at: datetime = field(default_factory=now)
+
+@dataclass
+class OrderEvent:
+    shop_id: str
+    order_id: str
+    status: str
+    payment_status: str
+    id: str = field(default_factory=identifier)
     created_at: datetime = field(default_factory=now)
